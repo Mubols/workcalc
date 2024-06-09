@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production Tracker</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to right, #ff9a9e, #fad0c4);
+    color: #333;
+    text-align: center;
+    padding: 20px;
+  }
+  input, button {
+    padding: 10px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    width: calc(100% - 44px);
+  }
+  button {
+    width: 100px;
+    cursor: pointer;
+    background-color: #ff9a9e;
+    color: white;
+  }
+  button:hover {
+    background-color: #fad0c4;
+  }
+  #output {
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+  <h2>Production Output Calculator 出来高計算ツール</h2>
+  
+  <label for="productionOutput">Production Output 良品数</label>
+  <input type="number" id="productionOutput" placeholder="Enter output" step="1"><br>
+  
+  <label for="downtime">Idle Time (optional) ダウンタイム (任意)</label>
+  <input type="number" id="downtime" placeholder="Enter downtime" step="1"><br>
+  
+  <label for="timeStarted">Time Started 始まる時間</label>
+  <input type="time" id="timeStarted" placeholder="HH:MM"><br>
+  
+  <label for="timeEnded">Time Ended 終わり時間</label>
+  <input type="time" id="timeEnded" placeholder="HH:MM"><br>
+  
+  <button onclick="calculate()">Calculate</button>
+  
+  <div id="output"></div>
+  
+  <script>
+    function calculate() {
+      const productionOutput = parseInt(document.getElementById('productionOutput').value);
+      const downtimeValue = document.getElementById('downtime').value;
+      const downtime = downtimeValue ? parseInt(downtimeValue) : 0;
+      const timeStartedValue = document.getElementById('timeStarted').value;
+      const timeEndedValue = document.getElementById('timeEnded').value;
+ 
+      // Check if all fields except downtime are filled
+      if (!productionOutput || !timeStartedValue || !timeEndedValue) {
+        alert('Please fill in all required fields with valid numbers and times.');
+        return;
+      }
+ 
+      const timeStarted = new Date('1970-01-01T' + timeStartedValue + 'Z');
+      const timeEnded = new Date('1970-01-01T' + timeEndedValue + 'Z');
+ 
+      // Calculate breaks not to include
+      const breaks = [new Date('1970-01-01T10:00Z'), new Date('1970-01-01T15:00Z'), new Date('1970-01-01T17:00Z')];
+      const lunchStart = new Date('1970-01-01T12:00Z');
+      const lunchEnd = new Date('1970-01-01T12:40Z');
+      
+      let breakTime = 0;
+      breaks.forEach(breakTimePoint => {
+        if (timeStarted < breakTimePoint && timeEnded > breakTimePoint) {
+          breakTime += 10; // 10 minute break
+        }
+      });
+      
+      if (timeStarted < lunchStart && timeEnded > lunchEnd) {
+        breakTime += 40; // 40 minute lunch break
+      }
+      
+      // Calculate total working time in minutes
+      let totalWorkingTime = (timeEnded - timeStarted) / 60000 - breakTime - downtime;
+      
+      // Convert to hours and round to two decimal places
+      totalWorkingTime = (totalWorkingTime / 60).toFixed(2);
+      
+      // Calculate production output per hour
+      const productionPerHour = (productionOutput / totalWorkingTime).toFixed(1);
+      
+      // Display results
+      document.getElementById('output').innerHTML = `
+        <p>Total Working Time 総時間: <strong>${totalWorkingTime} hours</strong></p>
+        <p>Production Output per Hour 出来高 (/h): <strong>${productionPerHour}</strong></p>
+      `;
+    }
+  </script>
+</body>
+</html>
